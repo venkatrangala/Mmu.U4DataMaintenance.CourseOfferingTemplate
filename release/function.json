@@ -1,0 +1,175 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+  "parameters": {
+    "integrationAppServiceEnvironmentResourceGroup": {
+      "type": "string"
+    },
+    "integrationSubscription": {
+      "type": "string"
+    },
+    "integrationAppServiceEnvironment": {
+      "type": "string"
+    },
+    "integrationAppServicePlanResourceGroup": {
+      "type": "string"
+    },
+    "integrationAppServicePlan": {
+      "type": "string"
+    },
+    "integrationAppServicePlanVnet": {
+      "type": "string"
+    },
+    "integrationAppServicePlanSubnet": {
+      "type": "string"
+    },
+    "integrationName": {
+      "type": "string"
+    },
+    "integrationUseDataMart": {
+      "type": "string"
+    },
+    "oracleConnectionStringSecretUri": {
+      "type": "string"
+    },
+    "unit4ConnectionStringSecretUri": {
+      "type": "string"
+    },
+    "dataMartConnectionStringSecretUri": {
+      "type": "string"
+    },
+    "metaDataConnectionStringSecretUri": {
+      "type": "string"
+    },
+    "integrationProcessingConnectionStringSecretUri": {
+      "type": "string"
+    },
+    "integrationEnvironment": {
+      "type": "string"
+    },
+    "integrationLogEnabled": {
+      "type": "string"
+    },
+    "integrationLogLevel": {
+      "type": "string"
+    },
+    "integrationLogUrlSecretUri": {
+      "type": "string"
+    },
+    "unit4ApiBaseUrlSecretUri": {
+      "type": "string"
+    },
+    "unit4ApiLoginUrlSecretUri": {
+      "type": "string"
+    },
+    "unit4ApiUsernameSecretUri": {
+      "type": "string"
+    },
+    "unit4ApiPasswordSecretUri": {
+      "type": "string"
+    },
+    "integrationScheduledTriggerTime": {
+      "type": "string"
+    },
+    "integrationAppInsightsName": {
+      "type": "string"
+    },
+    "integrationRequiredAcademicPeriod": {
+      "type": "string",
+      "defaultValue": "19/20"
+    }
+  },
+    "variables": {
+      "storageAccountName": "[toLower(concat(parameters('integrationSubscription'), parameters('integrationEnvironment'), parameters('integrationName')))]",
+      "integrationName": "[concat(toUpper(parameters('integrationSubscription')), '-', toUpper(parameters('integrationEnvironment')), '-', toLower(parameters('integrationName')))]",
+      "commonAppInsights": "[concat(toUpper(parameters('integrationSubscription')), '-', toUpper(parameters('integrationEnvironment')), '-', toLower(parameters('integrationAppInsightsName')))]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2018-07-01",
+            "name": "[variables('storageAccountName')]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "location": "[resourceGroup().location]",
+            "kind": "StorageV2",
+            "sku": {
+                "name": "Standard_LRS"
+            },
+            "properties": {
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [
+                        {
+                            "id": "[concat(subscription().id, '/resourceGroups/', parameters('integrationAppServicePlanResourceGroup'), '/providers/Microsoft.Network/virtualNetworks/', parameters('integrationAppServicePlanVnet'), '/subnets/', parameters('integrationAppServicePlanSubnet'))]",
+                            "action": "Allow"
+                        }
+                    ],
+                    "defaultAction": "Deny"
+                }
+            }
+        },
+        {
+            "apiVersion": "2016-08-01",
+            "name": "[variables('integrationName')]",
+            "type": "Microsoft.Web/sites",
+            "location": "[resourceGroup().location]",
+            "kind": "functionapp",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "httpsOnly": true,
+                "clientAffinityEnabled": false,
+                "serverFarmId": "[concat(subscription().id, '/resourceGroups/', parameters('integrationAppServicePlanResourceGroup'), '/providers/Microsoft.Web/serverfarms/', parameters('integrationAppServicePlan'))]",
+                "hostingEnvironment": "[parameters('integrationAppServiceEnvironment')]",
+                "hostingEnvironmentId": "[concat(subscription().id, '/resourceGroups/', parameters('integrationAppServiceEnvironmentResourceGroup'), '/providers/Microsoft.Web/hostingEnvironments/', parameters('integrationAppServiceEnvironment'))]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+            ],
+            "resources": [
+                {
+                    "apiVersion": "2016-08-01",
+                    "type": "config",
+                    "name": "web",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/sites', variables('integrationName'))]"
+                    ],
+                    "properties": {
+                        "alwaysOn": true
+                    }
+                },
+                {
+                    "apiVersion": "2016-08-01",
+                    "type": "config",
+                    "name": "appsettings",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/sites', variables('integrationName'))]"
+                    ],
+                  "properties": {
+                    "AzureWebJobsStorage": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2017-06-01').keys[0].value)]",
+                    "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(resourceId(subscription().subscriptionId, variables('commonAppInsights'), 'microsoft.insights/components/', variables('commonAppInsights')), '2015-05-01').InstrumentationKey]",
+                    "FUNCTIONS_WORKER_RUNTIME": "dotnet",
+                    "FUNCTIONS_EXTENSION_VERSION": "~2",
+                    "SS_connectionString": "[concat('@Microsoft.KeyVault(SecretUri=', parameters('oracleConnectionStringSecretUri'), ')')]",
+                    "U4_connectionString": "[concat('@Microsoft.KeyVault(SecretUri=', parameters('unit4ConnectionStringSecretUri'), ')')]",
+                    "DM_connectionString": "[concat('@Microsoft.KeyVault(SecretUri=', parameters('dataMartConnectionStringSecretUri'), ')')]",
+                    "metadata_connectionString": "[concat('@Microsoft.KeyVault(SecretUri=', parameters('metaDataConnectionStringSecretUri'), ')')]",
+                    "ip_connectionString": "[concat('@Microsoft.KeyVault(SecretUri=', parameters('integrationProcessingConnectionStringSecretUri'), ')')]",
+                    "Unit4Api:BaseUri": "[concat('@Microsoft.KeyVault(SecretUri=', parameters('unit4ApiBaseUrlSecretUri'), ')')]",
+                    "Unit4Api:LoginUri": "[concat('@Microsoft.KeyVault(SecretUri=', parameters('unit4ApiLoginUrlSecretUri'), ')')]",
+                    "Unit4Api:Username": "[concat('@Microsoft.KeyVault(SecretUri=', parameters('unit4ApiUsernameSecretUri'), ')')]",
+                    "Unit4Api:Password": "[concat('@Microsoft.KeyVault(SecretUri=', parameters('unit4ApiPasswordSecretUri'), ')')]",
+                    "StudentJourneyLogging:Enabled": "[parameters('integrationLogEnabled')]",
+                    "StudentJourneyLogging:SystemName": "[parameters('integrationName')]",
+                    "StudentJourneyLogging:LogLevel": "[parameters('integrationLogLevel')]",
+                    "StudentJourneyLogging:Url": "[concat('@Microsoft.KeyVault(SecretUri=', parameters('integrationLogUrlSecretUri'), ')')]",
+                    "UseDataMart": "[parameters('integrationUseDataMart')]",
+                    "ScheduledTriggerTime": "[parameters('integrationScheduledTriggerTime')]",
+                    "RequiredAcademicPeriod": "[parameters('integrationRequiredAcademicPeriod')]"
+                  }
+                }
+            ]
+        }
+    ],
+    "outputs": {}
+}

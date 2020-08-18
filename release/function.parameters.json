@@ -1,0 +1,81 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "integrationAppServiceEnvironmentResourceGroup": {
+      "value": "#{integration.appserviceenvironmentresourcegroup}#"
+    },
+    "integrationSubscription": {
+      "value": "#{integration.subscription}#"
+    },
+    "integrationAppServiceEnvironment": {
+      "value": "#{integration.appserviceenvironment}#"
+    },
+    "integrationAppServicePlanResourceGroup": {
+      "value": "#{integration.appserviceplanresourcegroup}#"
+    },
+    "integrationAppServicePlan": {
+      "value": "#{integration.appserviceplan}#"
+    },
+    "integrationAppServicePlanVnet": {
+      "value": "#{integration.appserviceplanvnet}#"
+    },
+    "integrationAppServicePlanSubnet": {
+      "value": "#{integration.appserviceplansubnet}#"
+    },
+    "integrationName": {
+      "value": "#{integration.name}#"
+    },
+    "integrationUseDataMart": {
+      "value": "#{integration.usedatamart}#"
+    },
+    "integrationEnvironment": {
+      "value": "#{integration.environment}#"
+    },
+    "oracleConnectionStringSecretUri": {
+      "value": "#{oracle.connectionstring.secreturi}#"
+    },
+    "unit4ConnectionStringSecretUri": {
+      "value": "#{unit4.connectionstring.secreturi}#"
+    },
+    "dataMartConnectionStringSecretUri": {
+      "value": "#{dm.connectionstring.secreturi}#"
+    },
+    "metaDataConnectionStringSecretUri": {
+      "value": "#{intmetadata.connectionstring.secreturi}#"
+    },
+    "integrationProcessingConnectionStringSecretUri": {
+      "value": "#{integrationprocessing.connectionstring.secreturi}#"
+    },
+    "integrationLogEnabled": {
+      "value": "#{integration.logenabled}#"
+    },
+    "integrationLogLevel": {
+      "value": "#{integration.loglevel}#"
+    },
+    "integrationLogUrlSecretUri": {
+      "value": "#{integration.logurl.secreturi}#"
+    },
+    "unit4ApiBaseUrlSecretUri": {
+      "value": "#{unit4api.baseurl.secreturi}#"
+    },
+    "unit4ApiLoginUrlSecretUri": {
+      "value": "#{unit4api.loginurl.secreturi}#"
+    },
+    "unit4ApiUsernameSecretUri": {
+      "value": "#{unit4api.username.secreturi}#"
+    },
+    "unit4ApiPasswordSecretUri": {
+      "value": "#{unit4api.password.secreturi}#"
+    },
+    "integrationScheduledTriggerTime": {
+      "value": "#{integration.scheduledtriggertime}#"
+    },
+    "integrationAppInsightsName": {
+      "value": "#{integration.appinsightsname}#"
+    },
+    "integrationRequiredAcademicPeriod": {
+      "value": "#{integration.requiredacademicperiod}#"
+    }
+  }
+}
